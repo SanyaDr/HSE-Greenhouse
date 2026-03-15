@@ -1,16 +1,20 @@
+import asyncio
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
- 
+
 from .config import Settings
+from .controllers.aiagent import router as aiagent_router
 from .controllers.auth import router as auth_router
 from .controllers.automation import router as automation_router
 from .controllers.devices import router as devices_router
 from .controllers.greenhouses import router as greenhouses_router
 from .controllers.profile import router as profile_router
-from .controllers.telemetry import router as telemetry_router
 from .controllers.rpc import router as rpc_router
-from .controllers.aiagent import router as aiagent_router
+from .controllers.telemetry import router as telemetry_router
 from .database import init_db
+from .services.aiagent import start_ai_agent_loop
+from .services.automation import start_automation_loop
 
 settings = Settings()
 app = FastAPI(title=settings.app_name)
@@ -40,5 +44,10 @@ app.include_router(aiagent_router)
 
 
 @app.on_event("startup")
-def on_startup():
+async def on_startup():
     init_db()
+    loop = asyncio.get_running_loop()
+    if settings.automation_loop_enabled:
+        loop.create_task(start_automation_loop())
+    if settings.ai_agent_enabled:
+        loop.create_task(start_ai_agent_loop())

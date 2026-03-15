@@ -9,4 +9,8 @@ pydantic[email]>=2.12
 pydantic-settings>=2.1
 python-multipart>=0.0.6
 httpx>=0.27
+<<<<<<< HEAD
 ollama>=0.1.8
+=======
+ollama
+>>>>>>> dd7733e4c1437cba4e6630a251aef15619b50996

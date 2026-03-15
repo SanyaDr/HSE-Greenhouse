@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Iterable
 
 import httpx
-from ollama import chat
+from ollama import Client
 from sqlmodel import Session, select
 
 from ..config import Settings
@@ -26,6 +26,7 @@ from ..services.telemetry import get_device_telemetry
 
 logger = logging.getLogger(__name__)
 settings = Settings()
+ollama_client = Client(host=settings.ollama_base_url or "http://127.0.0.1:11434")
 
 
 def _collect_numeric(samples: Iterable, limit: int | None = None) -> list[float]:
@@ -127,17 +128,44 @@ def _format_prompt(snapshot: TelemetrySnapshot, greenhouse: Greenhouse) -> list[
 
 
 def _call_ollama(messages: list[dict[str, str]]) -> str:
+    options = {
+        "temperature": settings.ai_agent_temperature,
+        "num_predict": settings.ai_agent_max_tokens,
+    }
     try:
-        response = chat(
+        chunks: list[str] = []
+        stream = ollama_client.chat(
+            model=settings.ai_agent_model,
+            messages=messages,
+            stream=True,
+            options=options,
+        )
+        for chunk in stream:
+            if chunk.get("error"):
+                raise RuntimeError(chunk["error"])
+            delta = (
+                chunk.get("message", {}).get("content")
+                or chunk.get("response")
+                or ""
+            )
+            if delta:
+                chunks.append(delta)
+        text = "".join(chunks).strip()
+        if text:
+            return text
+        logger.warning("Пустой ответ Ollama при потоковом режиме, повтор без stream")
+        result = ollama_client.chat(
             model=settings.ai_agent_model,
             messages=messages,
             stream=False,
-            options={
-                "temperature": settings.ai_agent_temperature,
-                "num_predict": settings.ai_agent_max_tokens,
-            },
+            options=options,
         )
-        return response.get("message", {}).get("content", "")
+        raw_text = (
+            result.get("message", {}).get("content")
+            or result.get("response")
+            or ""
+        )
+        return raw_text.strip()
     except httpx.HTTPError as exc:
         logger.error("Ollama HTTP error: %s", exc)
         raise
