@@ -59,3 +59,36 @@ class AutomationSetting(SQLModel, table=True):
     last_action: Optional[str] = Field(default=None)
     last_action_at: Optional[datetime] = Field(default=None)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class TelemetrySnapshot(SQLModel, table=True):
+    model_config = ConfigDict(arbitrary_types_allowed=True, from_attributes=True)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    device_id: Optional[int] = Field(default=None, foreign_key="device.id", index=True)
+    greenhouse_id: Optional[int] = Field(default=None, foreign_key="greenhouse.id", index=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    temperature_avg: Optional[float] = Field(default=None)
+    humidity_avg: Optional[float] = Field(default=None)
+    samples_count: int = Field(default=0)
+    window_started_at: datetime = Field(default_factory=datetime.utcnow)
+    window_finished_at: datetime = Field(default_factory=datetime.utcnow)
+    payload: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class AIRecommendation(SQLModel, table=True):
+    model_config = ConfigDict(arbitrary_types_allowed=True, from_attributes=True)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    snapshot_id: int = Field(foreign_key="telemetrysnapshot.id", index=True)
+    greenhouse_id: Optional[int] = Field(default=None, foreign_key="greenhouse.id", index=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    model_name: str = Field(default="")
+    summary: str = Field(default="")
+    actions: str = Field(default="")
+    forecast: Optional[str] = Field(default=None)
+    severity: Optional[str] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    raw_prompt: Optional[str] = Field(default=None, sa_column=Column(JSON))
+    raw_response: Optional[str] = Field(default=None, sa_column=Column(JSON))

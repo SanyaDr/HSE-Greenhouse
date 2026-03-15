@@ -3,6 +3,7 @@ from .automation import router as automation_router
 from .devices import router as devices_router
 from .profile import router as profile_router
 from .telemetry import router as telemetry_router
+from .aiagent import router as ai_router
 
 __all__ = [
     "auth_router",
@@ -10,4 +11,5 @@ __all__ = [
     "devices_router",
     "profile_router",
     "telemetry_router",
+    "ai_router",
 ]

@@ -10,6 +10,14 @@ from .greenhouse import (
     GreenhouseUpdate,
 )
 from .user import UserCreate, UserRead, UserUpdate
+from .ai import (
+    AIRecommendationList,
+    AIRecommendationRead,
+    ManualTelemetryPayload,
+    RunRecommendationResponse,
+    TelemetrySnapshotList,
+    TelemetrySnapshotRead,
+)
 
 __all__ = [
     "AutomationSettingCreate",
@@ -24,4 +32,10 @@ __all__ = [
     "UserCreate",
     "UserRead",
     "UserUpdate",
+    "AIRecommendationList",
+    "AIRecommendationRead",
+    "ManualTelemetryPayload",
+    "RunRecommendationResponse",
+    "TelemetrySnapshotList",
+    "TelemetrySnapshotRead",
 ]

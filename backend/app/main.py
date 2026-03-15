@@ -1,8 +1,6 @@
-import asyncio
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+ 
 from .config import Settings
 from .controllers.auth import router as auth_router
 from .controllers.automation import router as automation_router
@@ -13,7 +11,6 @@ from .controllers.telemetry import router as telemetry_router
 from .controllers.rpc import router as rpc_router
 from .controllers.aiagent import router as aiagent_router
 from .database import init_db
-from .services.automation import start_automation_loop
 
 settings = Settings()
 app = FastAPI(title=settings.app_name)
