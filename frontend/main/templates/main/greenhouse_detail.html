@@ -2388,5 +2388,847 @@ async function deleteGreenhouse() {
     // Предотвращение zoom на iOS при фокусе
     document.addEventListener('touchstart', function() {}, {passive: true});
   </script>
+<!-- AI Ассистент - панель прогнозов и рекомендаций -->
+<div class="ai-assistant-container">
+  <button class="ai-assistant-toggle" id="ai-toggle-btn">
+    <i class="fas fa-robot"></i>
+    <span class="ai-notification" id="ai-notification" style="display: none;">!</span>
+  </button>
+  
+  <div class="ai-assistant-window" id="ai-window">
+    <div class="ai-assistant-header">
+      <div class="ai-assistant-title">
+        <i class="fas fa-robot" style="color: var(--primary);"></i>
+        <span>AI Аналитика теплицы</span>
+      </div>
+      <button class="ai-assistant-close" id="ai-close-btn">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="ai-assistant-content" id="ai-content">
+      <!-- Прогнозы -->
+      <div class="ai-section">
+        <div class="ai-section-header">
+          <i class="fas fa-chart-line"></i>
+          <h3>Прогноз температуры</h3>
+        </div>
+        <div class="ai-forecast-cards" id="forecast-cards">
+          <div class="ai-loading">Загрузка прогноза...</div>
+        </div>
+        <div class="ai-forecast-actions">
+          <button class="ai-refresh-btn" id="refresh-forecast-btn">
+            <i class="fas fa-sync-alt"></i> Обновить прогноз
+          </button>
+        </div>
+      </div>
+      
+      <!-- Рекомендации -->
+      <div class="ai-section">
+        <div class="ai-section-header">
+          <i class="fas fa-lightbulb"></i>
+          <h3>Рекомендации по уходу</h3>
+        </div>
+        <div class="ai-recommendations-list" id="recommendations-list">
+          <div class="ai-loading">Загрузка рекомендаций...</div>
+        </div>
+        <div class="ai-recommendation-actions">
+          <button class="ai-refresh-btn" id="refresh-recommendations-btn">
+            <i class="fas fa-sync-alt"></i> Обновить рекомендации
+          </button>
+        </div>
+      </div>
+      
+      <!-- Сообщение об ошибке (скрыто по умолчанию) -->
+      <div class="ai-error-message" id="ai-error" style="display: none;">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span id="ai-error-text">Не удалось загрузить данные</span>
+      </div>
+    </div>
+    
+    <!-- Информация о теплице -->
+    <div class="ai-assistant-footer" id="ai-footer">
+      <div class="ai-footer-info">
+        <i class="fas fa-leaf"></i>
+        <span id="ai-greenhouse-name">Теплица на даче</span>
+      </div>
+      <span class="ai-updated-time" id="ai-updated-time">только что</span>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Стили для AI ассистента (прогнозы и рекомендации) */
+.ai-assistant-container {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.ai-assistant-toggle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  transition: all 0.2s;
+  position: relative;
+}
+
+.ai-assistant-toggle:hover {
+  transform: scale(1.1);
+  background: var(--primary-dark);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+.ai-notification {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: var(--warning);
+  color: white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 2px solid white;
+}
+
+.ai-assistant-window {
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+  width: 400px;
+  height: 550px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-assistant-window.active {
+  display: flex;
+}
+
+.ai-assistant-header {
+  padding: 18px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-assistant-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--dark);
+  font-size: 16px;
+}
+
+.ai-assistant-close {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.ai-assistant-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--dark);
+}
+
+.ai-assistant-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ai-section {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.ai-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.ai-section-header i {
+  font-size: 18px;
+}
+
+.ai-section-header h3 {
+  font-size: 16px;
+  margin: 0;
+  color: var(--dark);
+}
+
+.ai-loading {
+  text-align: center;
+  color: #999;
+  padding: 20px;
+  font-size: 14px;
+}
+
+.ai-forecast-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ai-forecast-card {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 12px;
+  border-left: 4px solid var(--primary);
+}
+
+.ai-forecast-time {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ai-forecast-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--dark);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ai-forecast-unit {
+  font-size: 14px;
+  color: #999;
+  font-weight: normal;
+}
+
+.ai-forecast-range {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #666;
+}
+
+.ai-forecast-range span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ai-forecast-range i {
+  color: #999;
+  font-size: 12px;
+}
+
+.ai-recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ai-recommendation-card {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 16px;
+  border-left: 4px solid;
+  transition: transform 0.2s;
+}
+
+.ai-recommendation-card:hover {
+  transform: translateX(4px);
+}
+
+.ai-recommendation-card.severity-info {
+  border-left-color: #2196F3;
+}
+
+.ai-recommendation-card.severity-warning {
+  border-left-color: var(--warning);
+}
+
+.ai-recommendation-card.severity-critical {
+  border-left-color: var(--danger);
+}
+
+.ai-recommendation-title {
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-recommendation-severity {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.severity-info .ai-recommendation-severity {
+  background: rgba(33, 150, 243, 0.15);
+  color: #2196F3;
+}
+
+.severity-warning .ai-recommendation-severity {
+  background: rgba(255, 152, 0, 0.15);
+  color: var(--warning);
+}
+
+.severity-critical .ai-recommendation-severity {
+  background: rgba(244, 67, 54, 0.15);
+  color: var(--danger);
+}
+
+.ai-recommendation-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.ai-recommendation-time {
+  font-size: 11px;
+  color: #999;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ai-refresh-btn {
+  width: 100%;
+  padding: 10px;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.ai-refresh-btn:hover {
+  background: #e0e0e0;
+  color: var(--dark);
+}
+
+.ai-error-message {
+  background: rgba(244, 67, 54, 0.1);
+  color: var(--danger);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-assistant-footer {
+  padding: 12px 20px;
+  background: #f8f9fa;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.ai-footer-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-updated-time {
+  color: #999;
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 768px) {
+  .ai-assistant-container {
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .ai-assistant-window {
+    width: calc(100vw - 40px);
+    height: 70vh;
+    bottom: 70px;
+    right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .ai-assistant-window {
+    width: calc(100vw - 30px);
+    height: 60vh;
+    bottom: 65px;
+  }
+  
+  .ai-assistant-toggle {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+}
+</style>
+
+<script>
+// JavaScript для AI ассистента (прогнозы и рекомендации)
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('AI Assistant: инициализация');
+  
+  const toggleBtn = document.getElementById('ai-toggle-btn');
+  const closeBtn = document.getElementById('ai-close-btn');
+  const aiWindow = document.getElementById('ai-window'); // Переименовал с window на aiWindow
+  const refreshForecastBtn = document.getElementById('refresh-forecast-btn');
+  const refreshRecommendationsBtn = document.getElementById('refresh-recommendations-btn');
+  const forecastCards = document.getElementById('forecast-cards');
+  const recommendationsList = document.getElementById('recommendations-list');
+  const aiError = document.getElementById('ai-error');
+  const aiErrorText = document.getElementById('ai-error-text');
+  const aiUpdatedTime = document.getElementById('ai-updated-time');
+  const aiGreenhouseName = document.getElementById('ai-greenhouse-name');
+  
+  // Получаем ID текущей теплицы
+  const urlParams = new URLSearchParams(window.location.search);
+  const greenhouseId = urlParams.get('greenhouse_id');
+  
+  console.log('AI Assistant: greenhouseId =', greenhouseId);
+  
+  // Проверяем, что элементы найдены
+  if (!toggleBtn) {
+    console.error('AI Assistant: кнопка toggle не найдена');
+    return;
+  }
+  
+  if (!aiWindow) {
+    console.error('AI Assistant: окно не найдено');
+    return;
+  }
+  
+  // Открыть/закрыть окно
+  toggleBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    console.log('AI Assistant: клик по кнопке');
+    
+    aiWindow.classList.toggle('active');
+    console.log('AI Assistant: класс active =', aiWindow.classList.contains('active'));
+    
+    if (aiWindow.classList.contains('active') && greenhouseId) {
+      loadForecast();
+      loadRecommendations();
+      
+      // Обновляем название теплицы в футере
+      const greenhouseName = document.getElementById('greenhouse-name')?.textContent || 'Теплица';
+      if (aiGreenhouseName) {
+        aiGreenhouseName.textContent = greenhouseName;
+      }
+    }
+  });
+  
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      console.log('AI Assistant: закрыть окно');
+      aiWindow.classList.remove('active');
+    });
+  }
+  
+  // Обновить прогноз
+  if (refreshForecastBtn) {
+    refreshForecastBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      loadForecast();
+    });
+  }
+  
+  // Обновить рекомендации
+  if (refreshRecommendationsBtn) {
+    refreshRecommendationsBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      loadRecommendations();
+    });
+  }
+  
+  // Загрузка прогноза из API
+  async function loadForecast() {
+    console.log('AI Assistant: загрузка прогноза');
+    
+    if (!greenhouseId) {
+      showError('ID теплицы не указан');
+      return;
+    }
+    
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      showError('Требуется авторизация');
+      return;
+    }
+    
+    // Показываем загрузку
+    if (forecastCards) {
+      forecastCards.innerHTML = '<div class="ai-loading">Загрузка прогноза...</div>';
+    }
+    hideError();
+    
+    try {
+      // Проверяем наличие функции backendFetch
+      if (typeof backendFetch !== 'function') {
+        console.warn('AI Assistant: backendFetch не найден, использую fetch');
+        
+        // Используем обычный fetch с API_URL
+        const response = await fetch(`${API_URL}/ai/forecasts`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            greenhouse_id: parseInt(greenhouseId),
+            metric: 'temperature',
+            horizon_hours: 72
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          renderForecast(data);
+          updateTimestamp();
+        } else {
+          console.warn('AI Assistant: ошибка API, показываю демо-данные');
+          renderDemoForecast();
+        }
+      } else {
+        // Используем backendFetch
+        const response = await backendFetch('/ai/forecasts', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            greenhouse_id: parseInt(greenhouseId),
+            metric: 'temperature',
+            horizon_hours: 72
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          renderForecast(data);
+          updateTimestamp();
+        } else {
+          console.warn('AI Assistant: ошибка API, показываю демо-данные');
+          renderDemoForecast();
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки прогноза:', error);
+      showError('Сервер недоступен');
+      // Демо-данные для тестирования
+      renderDemoForecast();
+    }
+  }
+  
+  // Загрузка рекомендаций из API
+  async function loadRecommendations() {
+    console.log('AI Assistant: загрузка рекомендаций');
+    
+    if (!greenhouseId) {
+      showError('ID теплицы не указан');
+      return;
+    }
+    
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      showError('Требуется авторизация');
+      return;
+    }
+    
+    // Показываем загрузку
+    if (recommendationsList) {
+      recommendationsList.innerHTML = '<div class="ai-loading">Загрузка рекомендаций...</div>';
+    }
+    hideError();
+    
+    try {
+      if (typeof backendFetch !== 'function') {
+        // Используем обычный fetch с API_URL
+        const response = await fetch(`${API_URL}/ai/recommendations`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            greenhouse_id: parseInt(greenhouseId)
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          renderRecommendations(data);
+          updateTimestamp();
+        } else {
+          console.warn('AI Assistant: ошибка API, показываю демо-данные');
+          renderDemoRecommendations();
+        }
+      } else {
+        // Используем backendFetch
+        const response = await backendFetch('/ai/recommendations', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            greenhouse_id: parseInt(greenhouseId)
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          renderRecommendations(data);
+          updateTimestamp();
+        } else {
+          console.warn('AI Assistant: ошибка API, показываю демо-данные');
+          renderDemoRecommendations();
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки рекомендаций:', error);
+      showError('Сервер недоступен');
+      // Демо-данные для тестирования
+      renderDemoRecommendations();
+    }
+  }
+  
+  // Отрисовка прогноза
+  function renderForecast(data) {
+    if (!forecastCards) return;
+    
+    if (!data.points || data.points.length === 0) {
+      forecastCards.innerHTML = '<div class="ai-loading">Нет данных для прогноза</div>';
+      return;
+    }
+    
+    // Показываем только первые 3 точки
+    const points = data.points.slice(0, 3);
+    
+    let html = '';
+    points.forEach(point => {
+      const date = new Date(point.timestamp);
+      const timeStr = date.toLocaleString('ru', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        day: '2-digit',
+        month: '2-digit'
+      });
+      
+      html += `
+        <div class="ai-forecast-card">
+          <div class="ai-forecast-time">
+            <i class="far fa-clock"></i> ${timeStr}
+          </div>
+          <div class="ai-forecast-value">
+            ${point.value.toFixed(1)}<span class="ai-forecast-unit">°C</span>
+          </div>
+          <div class="ai-forecast-range">
+            <span><i class="fas fa-arrow-up"></i> ${point.upper ? point.upper.toFixed(1) + '°C' : '—'}</span>
+            <span><i class="fas fa-arrow-down"></i> ${point.lower ? point.lower.toFixed(1) + '°C' : '—'}</span>
+          </div>
+        </div>
+      `;
+    });
+    
+    forecastCards.innerHTML = html;
+  }
+  
+  // Демо-прогноз для тестирования
+  function renderDemoForecast() {
+    const now = new Date();
+    const points = [
+      { timestamp: new Date(now.getTime() + 2*3600000).toISOString(), value: 24.5, lower: 23.0, upper: 26.0 },
+      { timestamp: new Date(now.getTime() + 6*3600000).toISOString(), value: 26.2, lower: 24.5, upper: 27.8 },
+      { timestamp: new Date(now.getTime() + 12*3600000).toISOString(), value: 22.8, lower: 21.0, upper: 24.5 }
+    ];
+    
+    renderForecast({ greenhouse_id: greenhouseId, metric: 'temperature', points: points });
+  }
+  
+  // Отрисовка рекомендаций
+  function renderRecommendations(data) {
+    if (!recommendationsList) return;
+    
+    if (!data.recommendations || data.recommendations.length === 0) {
+      recommendationsList.innerHTML = '<div class="ai-loading">Нет рекомендаций</div>';
+      return;
+    }
+    
+    let html = '';
+    data.recommendations.forEach(rec => {
+      const severity = rec.severity || 'info';
+      const severityClass = `severity-${severity}`;
+      const severityText = {
+        'info': 'Информация',
+        'warning': 'Внимание',
+        'critical': 'Критично'
+      }[severity] || 'Информация';
+      
+      const date = new Date(rec.created_at);
+      const timeStr = date.toLocaleString('ru', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        day: '2-digit',
+        month: '2-digit'
+      });
+      
+      html += `
+        <div class="ai-recommendation-card ${severityClass}">
+          <div class="ai-recommendation-title">
+            ${rec.title}
+            <span class="ai-recommendation-severity">${severityText}</span>
+          </div>
+          <div class="ai-recommendation-desc">
+            ${rec.description}
+          </div>
+          <div class="ai-recommendation-time">
+            <i class="far fa-clock"></i> ${timeStr}
+          </div>
+        </div>
+      `;
+    });
+    
+    recommendationsList.innerHTML = html;
+  }
+  
+  // Демо-рекомендации для тестирования
+  function renderDemoRecommendations() {
+    const now = new Date();
+    const recommendations = [
+      {
+        recommendation_id: '1',
+        title: 'Полив растений',
+        description: 'Рекомендуется полить растения сегодня вечером. Влажность почвы снижается до 35%.',
+        severity: 'info',
+        created_at: new Date(now.getTime() - 2*3600000).toISOString()
+      },
+      {
+        recommendation_id: '2',
+        title: 'Проветривание',
+        description: 'Температура в теплице поднимается выше оптимальной. Рекомендуется открыть форточки.',
+        severity: 'warning',
+        created_at: new Date(now.getTime() - 5*3600000).toISOString()
+      },
+      {
+        recommendation_id: '3',
+        title: 'Защита от заморозков',
+        description: 'Ожидается понижение температуры ночью до +5°C. Рекомендуется включить обогрев.',
+        severity: 'critical',
+        created_at: new Date(now.getTime() - 12*3600000).toISOString()
+      }
+    ];
+    
+    renderRecommendations({ greenhouse_id: greenhouseId, recommendations: recommendations });
+  }
+  
+  function showError(message) {
+    if (aiError && aiErrorText) {
+      aiErrorText.textContent = message;
+      aiError.style.display = 'flex';
+    }
+  }
+  
+  function hideError() {
+    if (aiError) {
+      aiError.style.display = 'none';
+    }
+  }
+  
+  function updateTimestamp() {
+    if (aiUpdatedTime) {
+      const now = new Date();
+      aiUpdatedTime.textContent = `обновлено ${now.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+  }
+  
+  // Закрытие по клику вне окна
+  document.addEventListener('click', function(e) {
+    if (aiWindow && toggleBtn && !aiWindow.contains(e.target) && !toggleBtn.contains(e.target) && aiWindow.classList.contains('active')) {
+      console.log('AI Assistant: клик вне окна, закрываю');
+      aiWindow.classList.remove('active');
+    }
+  });
+  
+  // Предотвращаем всплытие кликов внутри окна
+  if (aiWindow) {
+    aiWindow.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+  }
+  
+  console.log('AI Assistant: инициализация завершена');
+});
+</script>
 </body>
 </html>
