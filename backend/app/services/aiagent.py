@@ -2,6 +2,8 @@ from ollama import chat
 
 def ollamachat():
     try:
+        content
+
         stream = chat(
             model='qwen3.5:cloud',
             messages=[{'role': 'user', 'content': 'Почему небо голубое?'}],
