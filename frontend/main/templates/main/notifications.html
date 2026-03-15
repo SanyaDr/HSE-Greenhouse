@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Уведомления — Умная теплица</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'main/css/notifications.css' %}">
+</head>
+<body>
+  <!-- Боковое меню -->
+  <aside class="sidebar">
+    <div class="logo">
+      <i class="fas fa-leaf"></i>
+      <span>Умная теплица</span>
+    </div>
+    <a href="/dashboard" class="nav-item">
+      <i class="fas fa-home"></i>
+      <span>Панель управления</span>
+    </a>
+    <a href="/notifications" class="nav-item active">
+      <i class="fas fa-bell"></i>
+      <span>Уведомления</span>
+    </a>
+    <a href="/profile" class="nav-item">
+      <i class="fas fa-user"></i>
+      <span>Профиль</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-question-circle"></i>
+      <span>Поддержка</span>
+    </a>
+  </aside>
+
+  <!-- Основной контент -->
+  <main class="main">
+    <header class="header">
+      <h1 class="page-title">Уведомления и события</h1>
+      <div class="user-info">
+        <div class="user-avatar" id="header-avatar">З</div>
+        <span id="header-name">Загрузка...</span>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="filters">
+        <button class="filter-btn active">Все события</button>
+        <button class="filter-btn">Температура</button>
+        <button class="filter-btn">Привод</button>
+        <button class="filter-btn">Ошибки</button>
+      </div>
+
+      <div class="events-list">
+        <div class="event-item">
+          <div class="event-icon success">
+            <i class="fas fa-window-maximize"></i>
+          </div>
+          <div class="event-content">
+            <div class="event-title">Привод полностью открыт</div>
+            <div class="event-desc">Теплица «На даче» — положение 100%</div>
+            <div class="event-time">Сегодня, 14:32</div>
+          </div>
+        </div>
+
+        <div class="event-item">
+          <div class="event-icon warning">
+            <i class="fas fa-thermometer-half"></i>
+          </div>
+          <div class="event-content">
+            <div class="event-title">Высокая температура</div>
+            <div class="event-desc">Температура превысила 30°C. Начато открывание форточки.</div>
+            <div class="event-time">Сегодня, 14:30</div>
+          </div>
+        </div>
+
+        <div class="event-item">
+          <div class="event-icon info">
+            <i class="fas fa-tint"></i>
+          </div>
+          <div class="event-content">
+            <div class="event-title">Влажность в норме</div>
+            <div class="event-desc">Уровень влажности 68% — в пределах заданного диапазона.</div>
+            <div class="event-time">Сегодня, 12:15</div>
+          </div>
+        </div>
+
+        <div class="event-item">
+          <div class="event-icon error">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="event-content">
+            <div class="event-title">Потеря связи с устройством</div>
+            <div class="event-desc">Теплица «Зимняя» не отвечает более 1 часа.</div>
+            <div class="event-time">Вчера, 22:05</div>
+          </div>
+        </div>
+
+        <div class="event-item">
+          <div class="event-icon success">
+            <i class="fas fa-arrow-down"></i>
+          </div>
+          <div class="event-content">
+            <div class="event-title">Привод закрыт</div>
+            <div class="event-desc">Температура упала до 23°C. Форточка закрыта.</div>
+            <div class="event-time">Вчера, 19:40</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" style="display: none;">
+        <i class="fas fa-inbox"></i>
+        <p>Нет событий за выбранный период</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Загружаем профиль пользователя
+      loadUserProfile();
+    });
+
+    // Загрузка профиля пользователя
+    async function loadUserProfile() {
+      // Сначала проверяем localStorage
+      const userProfile = JSON.parse(localStorage.getItem('user_profile'));
+      const userNameElement = document.getElementById('header-name');
+      const userAvatarElement = document.getElementById('header-avatar');
+      
+      if (userProfile && userProfile.name) {
+        // Если есть профиль в localStorage, используем его
+        if (userNameElement) userNameElement.textContent = userProfile.name;
+        if (userAvatarElement) userAvatarElement.textContent = userProfile.name.charAt(0).toUpperCase();
+      } else {
+        // Если нет, пытаемся получить из API
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          try {
+            const response = await backendFetch('/profile/', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            if (response.ok) {
+              const userData = await response.json();
+              console.log('📋 Получены данные профиля:', userData);
+              
+              // Используем full_name из API
+              let fullName = '';
+              
+              if (userData.full_name && userData.full_name.trim() !== '') {
+                fullName = userData.full_name;
+              } else if (userData.email) {
+                fullName = userData.email.split('@')[0];
+              } else {
+                fullName = 'Пользователь';
+              }
+              
+              // Сохраняем профиль
+              const profile = {
+                name: fullName,
+                email: userData.email || '',
+                fullData: userData
+              };
+              localStorage.setItem('user_profile', JSON.stringify(profile));
+              
+              // Обновляем UI
+              if (userNameElement) {
+                userNameElement.textContent = fullName;
+              }
+              
+              if (userAvatarElement) {
+                userAvatarElement.textContent = fullName.charAt(0).toUpperCase();
+              }
+            }
+          } catch (error) {
+            console.error('❌ Ошибка загрузки профиля:', error);
+            if (userNameElement) userNameElement.textContent = 'Пользователь';
+            if (userAvatarElement) userAvatarElement.textContent = 'П';
+          }
+        } else {
+          if (userNameElement) userNameElement.textContent = 'Пользователь';
+          if (userAvatarElement) userAvatarElement.textContent = 'П';
+        }
+      }
+    }
+
+    // Обработка фильтров
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Убираем активный класс у всех кнопок
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.classList.remove('active');
+        });
+        // Добавляем активный класс к нажатой кнопке
+        btn.classList.add('active');
+        
+        // Здесь можно добавить логику фильтрации уведомлений
+        const filterType = btn.textContent.trim();
+        console.log('Фильтр:', filterType);
+      });
+    });
+  </script>
+</body>
+</html>

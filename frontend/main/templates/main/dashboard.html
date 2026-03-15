@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Умная теплица — Панель управления</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'main/css/dashboard.css' %}">
+  <style>
+    /* Стили для добавления теплицы */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    .modal-title {
+      margin-bottom: 20px;
+      font-size: 20px;
+      color: #333;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+      justify-content: flex-end;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #444;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+    }
+    
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .empty-icon {
+      font-size: 64px;
+      color: #ddd;
+      margin-bottom: 20px;
+    }
+    
+    .empty-state h3 {
+      margin-bottom: 12px;
+      color: #666;
+      font-weight: 500;
+    }
+    
+    .empty-state p {
+      color: #888;
+      margin-bottom: 24px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    .loading i {
+      margin-right: 10px;
+    }
+    
+    /* Иконка для теплицы */
+    .greenhouse-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      background: rgba(76, 175, 80, 0.1);
+      border-radius: 12px;
+      margin: 0 auto 15px;
+      color: var(--primary);
+      font-size: 24px;
+    }
+    
+    .greenhouse-icon i {
+      font-size: 24px;
+    }
+    
+    /* Стиль для карточки теплицы */
+    .greenhouse-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 25px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 300px;
+      justify-content: space-between;
+    }
+    
+    .greenhouse-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Стили для отображения местоположения теплицы в карточке */
+    .greenhouse-location {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 8px 0 15px 0;
+      color: #666;
+      font-size: 14px;
+      justify-content: center;
+      min-height: 20px;
+    }
+    
+    .greenhouse-location i {
+      color: #888;
+      font-size: 12px;
+    }
+    
+    .greenhouse-location.no-location {
+      color: #999;
+      font-style: italic;
+    }
+    
+    .greenhouse-location span {
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Обновляем header карточки */
+    .card-header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+    
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+      line-height: 1.3;
+    }
+    
+    /* Обновляем статус */
+    .status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      width: fit-content;
+      margin: 0 auto;
+    }
+    
+    .status.online {
+      background: rgba(76, 175, 80, 0.15);
+      color: var(--primary);
+    }
+    
+    .status.offline {
+      background: rgba(244, 67, 54, 0.15);
+      color: #f44336;
+    }
+    
+    /* Обновляем метрики */
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin: 15px 0;
+    }
+    
+    .metric {
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+    
+    .metric-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    
+    .metric-label {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    /* Обновляем статус привода */
+    .actuator-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      background: #f0f7ff;
+      border-radius: 8px;
+      margin-top: auto;
+      font-size: 14px;
+      color: #333;
+    }
+    
+    .actuator-status i {
+      color: #2196f3;
+    }
+    
+    /* Гибкая сетка теплиц с 3 в строку */
+    .greenhouses-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      width: 100%;
+    }
+    
+    /* Анимация для добавления новой теплицы */
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .greenhouse-card.new {
+      animation: slideIn 0.5s ease-out;
+    }
+    
+    /* Для адаптивности на меньших экранах */
+    @media (max-width: 1200px) {
+      .greenhouses-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .greenhouses-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* Action bar */
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .page-subtitle {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <!-- Боковое меню -->
+  <aside class="sidebar">
+    <div class="logo">
+      <i class="fas fa-leaf"></i>
+      <span>Умная теплица</span>
+    </div>
+    <a href="/dashboard" class="nav-item active">
+      <i class="fas fa-home"></i>
+      <span>Панель управления</span>
+    </a>
+    <a href="/notifications" class="nav-item">
+      <i class="fas fa-bell"></i>
+      <span>Уведомления</span>
+    </a>
+    <a href="/profile" class="nav-item">
+      <i class="fas fa-user"></i>
+      <span>Профиль</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-question-circle"></i>
+      <span>Поддержка</span>
+    </a>
+  </aside>
+
+  <!-- Основной контент -->
+  <main class="main">
+    <header class="header">
+      <h1 class="page-title">Панель управления</h1>
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">З</div>
+        <span id="user-name">Загрузка...</span>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="action-bar">
+        <h2 class="page-subtitle">Мои теплицы</h2>
+        <button class="btn" id="add-greenhouse-btn">
+          <i class="fas fa-plus"></i>
+          Добавить теплицу
+        </button>
+      </div>
+
+      <div id="greenhouses-container">
+        <!-- Теплицы будут загружаться динамически -->
+        <div class="loading" id="loading-state">
+          <i class="fas fa-spinner fa-spin"></i> Загрузка теплиц...
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Модальное окно добавления теплицы -->
+  <div class="modal" id="add-modal">
+    <div class="modal-content">
+      <h3 class="modal-title">Добавить теплицу</h3>
+      <form id="add-greenhouse-form">
+        <div class="form-group">
+          <label for="add-name">Название теплицы *</label>
+          <input type="text" id="add-name" required placeholder="Например: Теплица на даче">
+        </div>
+        <div class="form-group">
+          <label for="add-location">Местоположение</label>
+          <input type="text" id="add-location" placeholder="Например: Москва, дачный участок №5">
+        </div>
+        <div class="form-group">
+          <label for="add-description">Описание (опционально)</label>
+          <input type="text" id="add-description" placeholder="Дополнительная информация о теплице">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancel-add-btn">Отмена</button>
+          <button type="submit" class="btn" id="save-add-btn">
+            <i class="fas fa-save"></i> Создать
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+ 
+   <script>
+     window.SG_API = window.SG_API || {};
+     window.SG_API.hosts = window.SG_API.hosts || {};
+     window.SG_API.hosts.backend = '{{ BACKEND_URL }}';
+   </script>
+   <script src="{% static 'main/js/api_config.js' %}"></script>
+   <script>
+     const backendFetch = window.SG_API.fetch;
+     const buildApiUrl = window.SG_API.buildUrl;
+     // Глобальная переменная для хранения теплиц
+     let currentGreenhouses = [];
+     
+     document.addEventListener('DOMContentLoaded', function() {
+        // Загружаем профиль пользователя
+        loadUserProfile();
+        
+        // Загружаем теплицы
+        loadGreenhouses();
+        
+        // Инициализируем модальное окно
+        initAddModal();
+    });
+
+    // Инициализация модального окна добавления теплицы
+    function initAddModal() {
+      const addModal = document.getElementById('add-modal');
+      const addBtn = document.getElementById('add-greenhouse-btn');
+      const cancelBtn = document.getElementById('cancel-add-btn');
+      
+      // Открытие модального окна
+      addBtn.addEventListener('click', () => {
+        // Очищаем форму
+        document.getElementById('add-greenhouse-form').reset();
+        addModal.style.display = 'flex';
+        // Фокус на первое поле
+        document.getElementById('add-name').focus();
+      });
+      
+      // Закрытие модального окна
+      cancelBtn.addEventListener('click', () => {
+        addModal.style.display = 'none';
+      });
+      
+      // Закрытие по клику вне модального окна
+      window.addEventListener('click', (event) => {
+        if (event.target === addModal) {
+          addModal.style.display = 'none';
+        }
+      });
+      
+      // Закрытие по Escape
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && addModal.style.display === 'flex') {
+          addModal.style.display = 'none';
+        }
+      });
+      
+      // Обработка формы
+      document.getElementById('add-greenhouse-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await createGreenhouse();
+      });
+    }
+
+    // Создание новой теплицы
+    async function createGreenhouse() {
+      const name = document.getElementById('add-name').value.trim();
+      const location = document.getElementById('add-location').value.trim();
+      const description = document.getElementById('add-description').value.trim();
+      
+      if (!name) {
+        alert('Пожалуйста, введите название теплицы');
+        return;
+      }
+      
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        alert('Требуется авторизация');
+        return;
+      }
+      
+      // Подготавливаем данные для отправки
+      const greenhouseData = {
+        name: name,
+        location: location || null
+      };
+      
+      // Добавляем описание в metadata если есть
+      if (description) {
+        greenhouseData.metadata = {
+          description: description
+        };
+      }
+      
+      try {
+        const saveBtn = document.getElementById('save-add-btn');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание...';
+        saveBtn.disabled = true;
+        
+        const response = await backendFetch('/greenhouses/', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(greenhouseData)
+        });
+        
+        if (response.ok) {
+          const newGreenhouse = await response.json();
+          console.log('✅ Теплица создана:', newGreenhouse);
+          
+          // Закрываем модальное окно
+          document.getElementById('add-modal').style.display = 'none';
+          
+          // Добавляем новую теплицу в начало массива
+          currentGreenhouses.unshift(newGreenhouse);
+          
+          // Обновляем отображение
+          updateGreenhousesDisplay();
+          
+          // Показываем уведомление
+          showNotification(`Теплица "${name}" успешно создана!`, 'success');
+          
+        } else if (response.status === 401) {
+          alert('Ошибка авторизации. Пожалуйста, войдите снова.');
+        } else {
+          const errorData = await response.json();
+          console.error('Ошибка создания теплицы:', errorData);
+          showNotification('Не удалось создать теплицу. Проверьте введенные данные.', 'error');
+        }
+      } catch (error) {
+        console.error('❌ Ошибка создания теплицы:', error);
+        showNotification('Ошибка подключения к серверу', 'error');
+      } finally {
+        const saveBtn = document.getElementById('save-add-btn');
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+      }
+    }
+
+    // Показать уведомление
+    function showNotification(message, type = 'info') {
+      // Создаем элемент уведомления
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        <span>${message}</span>
+        <button class="notification-close">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      
+      // Добавляем стили для уведомления
+      if (!document.querySelector('#notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+          .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 2000;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 400px;
+          }
+          
+          .notification.success {
+            border-left: 4px solid var(--primary);
+          }
+          
+          .notification.error {
+            border-left: 4px solid var(--danger);
+          }
+          
+          .notification i {
+            font-size: 20px;
+          }
+          
+          .notification.success i {
+            color: var(--primary);
+          }
+          
+          .notification.error i {
+            color: var(--danger);
+          }
+          
+          .notification span {
+            flex: 1;
+          }
+          
+          .notification-close {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          
+          .notification-close:hover {
+            color: #666;
+          }
+          
+          @keyframes slideInRight {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      // Добавляем уведомление на страницу
+      document.body.appendChild(notification);
+      
+      // Добавляем обработчик закрытия
+      notification.querySelector('.notification-close').addEventListener('click', () => {
+        notification.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      });
+      
+      // Автоматическое закрытие через 5 секунд
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.style.animation = 'slideOutRight 0.3s ease-out';
+          setTimeout(() => {
+            if (notification.parentNode) {
+              notification.parentNode.removeChild(notification);
+            }
+          }, 300);
+        }
+      }, 3000);
+      
+      // Добавляем анимацию исчезновения
+      if (!document.querySelector('#notification-out-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-out-styles';
+        style.textContent = `
+          @keyframes slideOutRight {
+            from {
+              transform: translateX(0);
+              opacity: 1;
+            }
+            to {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+
+    // Загрузка профиля пользователя
+    async function loadUserProfile() {
+        const userProfile = JSON.parse(localStorage.getItem('user_profile'));
+        const userNameElement = document.getElementById('user-name');
+        const userAvatarElement = document.getElementById('user-avatar');
+        
+        if (userProfile && userProfile.name) {
+            // Если есть профиль в localStorage, используем его
+            if (userNameElement) userNameElement.textContent = userProfile.name;
+            if (userAvatarElement) userAvatarElement.textContent = userProfile.name.charAt(0).toUpperCase();
+        } else {
+            // Если нет, пытаемся получить из API
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                try {
+                    const response = await backendFetch('/profile/', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const userData = await response.json();
+                        console.log('📋 Получены данные профиля:', userData);
+                        
+                        // Используем full_name из API
+                        let fullName = '';
+                        
+                        if (userData.full_name && userData.full_name.trim() !== '') {
+                            fullName = userData.full_name;
+                        } else if (userData.email) {
+                            fullName = userData.email.split('@')[0];
+                        } else {
+                            fullName = 'Пользователь';
+                        }
+                        
+                        // Сохраняем профиль
+                        const profile = {
+                            name: fullName,
+                            email: userData.email || '',
+                            fullData: userData
+                        };
+                        localStorage.setItem('user_profile', JSON.stringify(profile));
+                        
+                        // Обновляем UI
+                        if (userNameElement) {
+                            userNameElement.textContent = fullName;
+                        }
+                        
+                        if (userAvatarElement) {
+                            userAvatarElement.textContent = fullName.charAt(0).toUpperCase();
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Ошибка загрузки профиля:', error);
+                    if (userNameElement) userNameElement.textContent = 'Пользователь';
+                    if (userAvatarElement) userAvatarElement.textContent = 'П';
+                }
+            } else {
+                if (userNameElement) userNameElement.textContent = 'Пользователь';
+                if (userAvatarElement) userAvatarElement.textContent = 'П';
+            }
+        }
+    }
+
+    // Загрузка теплиц из API
+    async function loadGreenhouses() {
+        const container = document.getElementById('greenhouses-container');
+        const token = localStorage.getItem('access_token');
+        
+        // Показываем состояние загрузки
+        if (container) {
+            container.innerHTML = `
+                <div class="loading" id="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i> Загрузка теплиц...
+                </div>
+            `;
+        }
+        
+        if (!token) {
+            showEmptyState('Требуется авторизация');
+            return;
+        }
+        
+        try {
+            const response = await backendFetch('/greenhouses/', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (response.ok) {
+                const greenhouses = await response.json();
+                console.log('🌱 Получены теплицы:', greenhouses);
+                
+                // Сохраняем теплицы в глобальной переменной
+                currentGreenhouses = greenhouses.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                
+                if (currentGreenhouses.length > 0) {
+                    updateGreenhousesDisplay();
+                } else {
+                    showEmptyState('У вас еще нет теплиц');
+                }
+            } else if (response.status === 401) {
+                showEmptyState('Требуется авторизация');
+                console.log('Ошибка авторизации, токен недействителен');
+            } else {
+                showEmptyState('Ошибка загрузки данных');
+                console.error('Ошибка загрузки теплиц:', response.status);
+            }
+        } catch (error) {
+            console.error('❌ Ошибка загрузки теплиц:', error);
+            showEmptyState('Ошибка подключения к серверу');
+        }
+    }
+
+    // Эта функция заменяет все предыдущие версии updateGreenhousesDisplay
+    async function updateGreenhousesDisplay() {
+        const container = document.getElementById('greenhouses-container');
+        
+        if (currentGreenhouses.length === 0) {
+            showEmptyState('У вас еще нет теплиц');
+            return;
+        }
+        
+        container.innerHTML = `<div class="loading"><i class="fas fa-spinner fa-spin"></i> Загрузка показателей...</div>`;
+        
+        const grid = document.createElement('div');
+        grid.className = 'greenhouses-grid';
+        
+        // Асинхронно создаем все карточки
+        const cardPromises = currentGreenhouses.map(greenhouse => createGreenhouseCard(greenhouse));
+        const cards = await Promise.all(cardPromises);
+        
+        cards.forEach((card, index) => {
+            // Добавляем анимацию для первой (самой новой) карточки
+            if (index === 0 && card.classList) {
+                card.classList.add('new');
+            }
+            grid.appendChild(card);
+        });
+        
+        container.innerHTML = '';
+        container.appendChild(grid);
+    }
+
+    // Эта функция заменяет все предыдущие версии createGreenhouseCard
+     async function createGreenhouseCard(greenhouse) {
+         const card = document.createElement('a');
+         card.href = `/greenhouse_detail?greenhouse_id=${greenhouse.id}`;
+         card.className = 'greenhouse-card';
+         card.style.textDecoration = 'none';
+         card.style.color = 'inherit';
+         
+         // Получаем актуальные метрики из API
+         const metrics = await loadGreenhouseMetricsOptimized(greenhouse.id);
+         const isOnline = greenhouse.is_active !== false;
+         
+         // Инициализируем переменные по умолчанию
+         let temperatureDisplay = '—';
+         let humidityDisplay = '—';
+         let actuatorStatus = 'Нет данных';
+         let actuatorIcon = 'fa-exclamation-triangle';
+ 
+         // Обновляем значения, если теплица онлайн и метрики получены
+         if (isOnline && metrics) {
+             if (metrics.temperature !== null) {
+                 temperatureDisplay = parseFloat(metrics.temperature).toFixed(1);
+             }
+             if (metrics.humidity !== null) {
+                 humidityDisplay = Math.round(parseFloat(metrics.humidity));
+             }
+             // Обрабатываем статус актуатора
+             if (metrics.actuatorOpenState !== null) {
+                 if (metrics.actuatorOpenState === 'true') {
+                     actuatorStatus = 'Открыт';
+                     actuatorIcon = 'fa-window-maximize';
+                 } else {
+                     actuatorStatus = 'Закрыт';
+                     actuatorIcon = 'fa-window-close';
+                 }
+             }
+         }
+         
+         const hasLocation = greenhouse.location && greenhouse.location.trim() !== '';
+         const locationText = hasLocation ? greenhouse.location : 'Местоположение не указано';
+         
+         // Формируем HTML карточки с актуальными данными
+         card.innerHTML = `
+             <div class="greenhouse-icon"><i class="fas fa-leaf"></i></div>
+             <div class="card-header">
+                 <h3 class="card-title">${escapeHtml(greenhouse.name)}</h3>
+                 <span class="status ${isOnline ? 'online' : 'offline'}">${isOnline ? 'Онлайн' : 'Оффлайн'}</span>
+             </div>
+             <div class="greenhouse-location ${!hasLocation ? 'no-location' : ''}">
+                 <i class="fas fa-map-marker-alt"></i>
+                 <span>${escapeHtml(locationText)}</span>
+             </div>
+             <div class="metrics">
+                 <div class="metric">
+                     <div class="metric-value">${temperatureDisplay}${temperatureDisplay !== '—' ? '°C' : ''}</div>
+                     <div class="metric-label">Температура</div>
+                 </div>
+                 <div class="metric">
+                     <div class="metric-value">${humidityDisplay}${humidityDisplay !== '—' ? '%' : ''}</div>
+                     <div class="metric-label">Влажность</div>
+                 </div>
+             </div>
+             <div class="actuator-status">
+                 <i class="fas ${actuatorIcon}"></i>
+                 <span>${actuatorStatus}</span>
+             </div>
+         `;
+         
+         return card;
+      }
+
+    // Показать состояние "пусто"
+    function showEmptyState(message) {
+        const container = document.getElementById('greenhouses-container');
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-seedling"></i>
+                </div>
+                <h3>${message}</h3>
+                <p>Добавьте свою первую теплицу, чтобы начать мониторинг и управление</p>
+                <button class="btn" id="empty-add-btn">
+                    <i class="fas fa-plus"></i>
+                    Добавить теплицу
+                </button>
+            </div>
+        `;
+        
+        // Добавляем обработчик для кнопки в empty state
+        document.getElementById('empty-add-btn').addEventListener('click', () => {
+            document.getElementById('add-modal').style.display = 'flex';
+        });
+    }
+
+    // Экранирование HTML для безопасности
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Функция для обновления списка теплиц (можно вызвать после добавления новой)
+    window.updateGreenhouses = function() {
+        loadGreenhouses();
+    };
+    
+    // Автоматическое обновление каждые 30 секунд
+    setInterval(() => {
+        loadGreenhouses();
+    }, 1200000);
+  </script>
+  <script>// Оптимизированная версия с кэшированием данных
+    let metricsCache = {};
+    const CACHE_DURATION = 60000; // 1 минута
+    
+    // Загрузка показателей для конкретной теплицы с кэшированием
+    async function loadGreenhouseMetricsOptimized(greenhouseId) {
+        const token = localStorage.getItem('access_token');
+        if (!token) return null;
+        
+        // Проверяем кэш
+        const now = Date.now();
+        if (metricsCache[greenhouseId] && now - metricsCache[greenhouseId].timestamp < CACHE_DURATION) {
+            return metricsCache[greenhouseId].data;
+        }
+        
+        try {
+            // 1. Получаем устройства для теплицы
+            const devicesResponse = await backendFetch(`/greenhouses/${greenhouseId}/devices`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!devicesResponse.ok) {
+                console.error(`Ошибка загрузки устройств для теплицы ${greenhouseId}:`, devicesResponse.status);
+                // Возвращаем null, чтобы отобразить "—"
+                metricsCache[greenhouseId] = {
+                    data: null,
+                    timestamp: now
+                };
+                return null;
+            }
+            
+            const devices = await devicesResponse.json();
+            
+            // Если нет устройств, возвращаем null
+            if (!devices || devices.length === 0) {
+                metricsCache[greenhouseId] = {
+                    data: null,
+                    timestamp: now
+                };
+                return null;
+            }
+            
+                    let temperature = null;
+                    let humidity = null;
+                    let actuatorOpenState = null; // Инициализируем переменную для статуса актуатора            
+            // 2. Параллельно загружаем телеметрию для всех устройств
+            const telemetryPromises = devices.map(async (device) => {
+                try {
+                    const response = await backendFetch(`/telemetry/${device.id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                    return null;
+                } catch (error) {
+                    console.error(`Ошибка загрузки телеметрии для устройства ${device.id}:`, error);
+                    return null;
+                }
+            });
+            
+            const telemetryResults = await Promise.all(telemetryPromises);
+            
+            // 3. Анализируем телеметрию
+            for (const telemetryData of telemetryResults) {
+                if (!telemetryData || !telemetryData.telemetry) continue;
+                
+                const telemetry = telemetryData.telemetry;
+                
+                // Ищем температуру
+                if (temperature === null) {
+                    const tempKeys = ['temperature', 'temp', 'Temperature', 'Temp'];
+                    for (const key of tempKeys) {
+                        if (telemetry[key] && telemetry[key].length > 0) {
+                            const lastSample = telemetry[key][telemetry[key].length - 1];
+                            temperature = lastSample.value;
+                            break;
+                        }
+                    }
+                }
+                
+                // Ищем влажность
+                if (humidity === null) {
+                    const humKeys = ['humidity', 'hum', 'Humidity', 'Hum'];
+                    for (const key of humKeys) {
+                        if (telemetry[key] && telemetry[key].length > 0) {
+                            const lastSample = telemetry[key][telemetry[key].length - 1];
+                            humidity = lastSample.value;
+                            break;
+                        }
+                    }
+                }
+
+                // Ищем статус актуатора
+                if (actuatorOpenState === null) {
+                    const actuatorKeys = ['actuatorOpen']; // Key from the problem description
+                    for (const key of actuatorKeys) {
+                        if (telemetry[key] && telemetry[key].length > 0) {
+                            const lastSample = telemetry[key][telemetry[key].length - 1];
+                            actuatorOpenState = lastSample.value; // Will be "true" or "false" string
+                            break;
+                        }
+                    }
+                }
+                
+                
+                // Если нашли оба значения, прекращаем
+                if (temperature !== null && humidity !== null) {
+                    break;
+                }
+            }
+            
+            const result = { temperature, humidity, actuatorOpenState };
+            
+            // Сохраняем в кэш
+            metricsCache[greenhouseId] = {
+                data: result,
+                timestamp: now
+            };
+            
+            return result;
+            
+        } catch (error) {
+            console.error(`❌ Ошибка загрузки показателей для теплицы ${greenhouseId}:`, error);
+            return null;
+        }
+    }
+    
+    // Создание карточки теплицы с реальными данными
+    async function createGreenhouseCard(greenhouse) {
+        const card = document.createElement('a');
+        card.href = `/greenhouse_detail?greenhouse_id=${greenhouse.id}`;
+        card.className = 'greenhouse-card';
+        card.style.textDecoration = 'none';
+        card.style.color = 'inherit';
+        
+        // Получаем реальные показатели из API
+        const metrics = await loadGreenhouseMetricsOptimized(greenhouse.id);
+        
+        const isOnline = greenhouse.is_active !== false;
+        
+        // Форматируем значения
+        let temperatureDisplay = '—';
+        let humidityDisplay = '—';
+        let actuatorStatus = 'Нет данных'; // Инициализируем
+        let actuatorIcon = 'fa-exclamation-triangle'; // Инициализируем
+
+        if (isOnline) {
+            // Только если есть реальные данные из API, показываем их
+            if (metrics && metrics.temperature !== null) {
+                temperatureDisplay = typeof metrics.temperature === 'number' ?
+                    metrics.temperature.toFixed(1) :
+                    parseFloat(metrics.temperature).toFixed(1);
+            }
+            // Если данных нет - остаётся "—"
+
+            if (metrics && metrics.humidity !== null) {
+                humidityDisplay = typeof metrics.humidity === 'number' ?
+                    Math.round(metrics.humidity) :
+                    Math.round(parseFloat(metrics.humidity));
+            }
+            // Если данных нет - остаётся "—"
+
+            // Логика обработки статуса актуатора
+            if (metrics && metrics.actuatorOpenState !== null) {
+                if (metrics.actuatorOpenState === 'true') {
+                    actuatorStatus = 'Открыт';
+                    actuatorIcon = 'fa-window-maximize';
+                } else {
+                    actuatorStatus = 'Закрыт';
+                    actuatorIcon = 'fa-window-close';
+                }
+            } else {
+                actuatorStatus = 'Нет данных';
+                actuatorIcon = 'fa-exclamation-triangle';
+            }
+        } else {
+            // Если оффлайн
+            actuatorStatus = 'Нет данных';
+            actuatorIcon = 'fa-exclamation-triangle';
+        }
+
+        // Выбираем иконку в зависимости от статуса
+        const greenhouseIcon = 'fa-leaf'; // The icon for the greenhouse itself
+
+        
+        // Формируем отображение местоположения
+        const hasLocation = greenhouse.location && greenhouse.location.trim() !== '';
+        const locationClass = hasLocation ? '' : 'no-location';
+        const locationText = hasLocation ? greenhouse.location : 'Местоположение не указано';
+        
+        card.innerHTML = `
+            <div class="greenhouse-icon">
+                <i class="fas ${greenhouseIcon}"></i>
+            </div>
+            <div class="card-header">
+                <h3 class="card-title">${escapeHtml(greenhouse.name)}</h3>
+                <span class="status ${isOnline ? 'online' : 'offline'}">
+                    ${isOnline ? 'Онлайн' : 'Оффлайн'}
+                </span>
+            </div>
+            <div class="greenhouse-location ${locationClass}">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>${escapeHtml(locationText)}</span>
+            </div>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-value">${temperatureDisplay}${isOnline && temperatureDisplay !== '—' ? '°C' : ''}</div>
+                    <div class="metric-label">Температура</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value">${humidityDisplay}${isOnline && humidityDisplay !== '—' ? '%' : ''}</div>
+                    <div class="metric-label">Влажность</div>
+                </div>
+            </div>
+            <div class="actuator-status">
+                <i class="fas ${actuatorIcon}"></i>
+                <span>${actuatorStatus}</span>
+            </div>
+        `;
+        
+        return card;
+    }
+    
+    // Обновление отображения теплиц (асинхронная версия)
+    async function updateGreenhousesDisplay() {
+        const container = document.getElementById('greenhouses-container');
+        
+        if (currentGreenhouses.length === 0) {
+            showEmptyState('У вас еще нет теплиц');
+            return;
+        }
+        
+        // Показываем состояние загрузки
+        container.innerHTML = `
+            <div class="loading" id="loading-state">
+                <i class="fas fa-spinner fa-spin"></i> Загрузка показателей...
+            </div>
+        `;
+        
+        // Создаем сетку
+        const grid = document.createElement('div');
+        grid.className = 'greenhouses-grid';
+        
+        // Создаем карточки асинхронно
+        for (let i = 0; i < currentGreenhouses.length; i++) {
+            const greenhouse = currentGreenhouses[i];
+            const greenhouseCard = await createGreenhouseCard(greenhouse);
+            
+            // Добавляем класс для анимации только для самой новой теплицы
+            if (i === 0 && greenhouseCard.classList) {
+                greenhouseCard.classList.add('new');
+            }
+            grid.appendChild(greenhouseCard);
+        }
+        
+        container.innerHTML = '';
+        container.appendChild(grid);
+    }
+  </script>
+</body>
+</html>

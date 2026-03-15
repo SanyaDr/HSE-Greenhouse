@@ -1,0 +1,820 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  :root {
+    --primary: #4caf50;
+    --primary-dark: #388e3c;
+    --danger: #f44336;
+    --warning: #ff9800;
+    --success: #4caf50;
+    --gray: #f5f5f5;
+    --dark: #333;
+    --light: #fff;
+    --border: #e0e0e0;
+  }
+  
+  body {
+    background-color: #f9f9f9;
+    color: var(--dark);
+    display: flex;
+    min-height: 100vh;
+  }
+  
+  /* Боковое меню */
+  .sidebar {
+    width: 240px;
+    background: var(--light);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .logo {
+    padding: 0 20px 20px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .nav-item {
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: background 0.2s;
+  }
+  
+  .nav-item:hover,
+  .nav-item.active {
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--primary);
+  }
+  
+  .nav-item i {
+    width: 20px;
+    text-align: center;
+  }
+  
+  /* Основной контент */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .header {
+    padding: 20px 30px;
+    background: var(--light);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .page-title {
+    margin-bottom: 24px;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--dark);
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+  
+  /* Контент */
+  .content {
+    padding: 30px;
+    flex: 1;
+  }
+  
+  .page-title {
+    padding: 5px 30px;
+    margin-bottom: 24px;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--dark);
+  }
+  
+  .action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+  }
+  
+  .btn:hover {
+    background: var(--primary-dark);
+  }
+  
+  /* Сетка теплиц */
+  .greenhouses {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  
+  .greenhouse-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  .greenhouse-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 16px;
+  }
+  
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--dark);
+  }
+  
+  .status {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+  
+  .status.online {
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--success);
+  }
+  
+  .status.offline {
+    background: rgba(244, 67, 54, 0.15);
+    color: var(--danger);
+  }
+  
+  .metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .metric {
+    text-align: center;
+  }
+  
+  .metric-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  
+  .metric-label {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .actuator-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .actuator-status i {
+    color: var(--primary);
+  }
+  
+  .actuator-status.moving i {
+    color: var(--warning);
+  }
+  
+  /* Адаптация для мобильных */
+  @media (max-width: 768px) {
+    body {
+      flex-direction: column;
+    }
+  
+    .sidebar {
+      width: 100%;
+      height: auto;
+      flex-direction: row;
+      padding: 0;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+  
+    .logo {
+      padding: 15px 20px;
+    }
+  
+    .nav-item {
+      padding: 15px 20px;
+    }
+  
+    .header {
+      padding: 15px 20px;
+    }
+  
+    .content {
+      padding: 20px;
+    }
+  
+    .greenhouses {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* Дополнительные стили для динамических теплиц */
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-top: 20px;
+}
+
+.empty-icon {
+  font-size: 64px;
+  color: #ddd;
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  margin-bottom: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.empty-state p {
+  color: #888;
+  margin-bottom: 24px;
+  max-width: 400px;
+  margin: 0 auto 24px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  grid-column: 1 / -1;
+}
+
+.loading i {
+  margin-right: 10px;
+}
+
+.greenhouse-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 12px;
+  margin: 0 auto 15px;
+  color: var(--primary);
+  font-size: 24px;
+}
+
+.greenhouse-icon i {
+  font-size: 24px;
+}
+
+.greenhouse-card-with-icon {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 25px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.greenhouse-card-with-icon:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 768px) {
+  .empty-icon {
+      font-size: 48px;
+  }
+  
+  .empty-state {
+      padding: 40px 20px;
+  }
+  
+  .greenhouse-icon {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 12px;
+  }
+  
+  .greenhouse-icon i {
+      font-size: 20px;
+  }
+}
+/* Стили для отображения местоположения теплицы в карточке */
+.greenhouse-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 15px 0;
+  color: #666;
+  font-size: 14px;
+  justify-content: center;
+  min-height: 20px;
+}
+
+.greenhouse-location i {
+  color: #888;
+  font-size: 12px;
+}
+
+.greenhouse-location.no-location {
+  color: #999;
+  font-style: italic;
+}
+
+.greenhouse-location span {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Обновление стилей карточки для лучшего отображения */
+.greenhouse-card-with-icon {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 25px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px; /* Увеличиваем высоту */
+  justify-content: space-between;
+}
+
+.greenhouse-card-with-icon:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Обновляем header карточки */
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Обновляем статус */
+.status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.status.online {
+  background: rgba(76, 175, 80, 0.15);
+  color: var(--primary);
+}
+
+.status.offline {
+  background: rgba(244, 67, 54, 0.15);
+  color: var(--danger);
+}
+
+/* Обновляем метрики */
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.metric {
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.metric-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Обновляем статус привода */
+.actuator-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background: #f0f7ff;
+  border-radius: 8px;
+  margin-top: auto;
+  font-size: 14px;
+  color: #333;
+}
+
+.actuator-status i {
+  color: #2196f3;
+}
+
+/* Иконка теплицы */
+.greenhouse-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 12px;
+  margin: 0 auto 15px;
+  color: var(--primary);
+  font-size: 24px;
+}
+.greenhouses-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  width: 100%;
+}
+.greenhouse-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 25px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 300px;
+  justify-content: space-between;
+}
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.greenhouse-card.new {
+  animation: slideIn 0.5s ease-out;
+}
+/* Мобильная адаптация для телефонов */
+@media (max-width: 768px) {
+  body {
+    flex-direction: column;
+    font-size: 14px;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    padding: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .logo {
+    padding: 15px 20px;
+    font-size: 18px;
+    white-space: nowrap;
+  }
+
+  .logo span {
+    display: none; /* Скрываем текст логотипа на маленьких экранах */
+  }
+
+  .nav-item {
+    padding: 15px;
+    min-width: fit-content;
+    font-size: 14px;
+    justify-content: center;
+  }
+
+  .nav-item span {
+    display: none; /* Скрываем текст пунктов меню, оставляем только иконки */
+  }
+
+  .nav-item i {
+    font-size: 18px;
+    margin: 0;
+  }
+
+  .header {
+    padding: 15px 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .page-title {
+    padding: 5px 20px;
+    font-size: 20px;
+    order: 1;
+    width: 100%;
+    margin-bottom: 15px;
+  }
+
+  .action-bar {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+    margin-bottom: 20px;
+  }
+
+  .user-info {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .user-info span {
+    display: none; /* Скрываем имя пользователя на маленьких экранах */
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .content {
+    padding: 15px;
+    max-width: 100%;
+  }
+
+  .greenhouses-grid {
+    grid-template-columns: 1fr !important; /* Одна колонка на мобильных */
+    gap: 15px;
+  }
+
+  .greenhouse-card,
+  .greenhouse-card-with-icon {
+    min-height: 280px;
+    padding: 20px 15px;
+    margin: 0;
+    width: 100%;
+  }
+
+  .card-title {
+    font-size: 16px;
+  }
+
+  .greenhouse-location span {
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 15px 0;
+  }
+
+  .metric-value {
+    font-size: 18px;
+  }
+
+  .metric-label {
+    font-size: 11px;
+  }
+
+  .actuator-status {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .btn {
+    padding: 12px 20px;
+    width: 100%;
+    font-size: 16px;
+    justify-content: center;
+  }
+
+  .empty-state {
+    padding: 40px 15px;
+    margin: 0;
+  }
+
+  .empty-icon {
+    font-size: 48px;
+  }
+
+  .greenhouse-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 12px;
+  }
+
+  .greenhouse-icon i {
+    font-size: 20px;
+  }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 480px) {
+  .sidebar {
+    justify-content: space-around;
+  }
+
+  .nav-item {
+    padding: 15px 20px;
+  }
+
+  .page-title {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .greenhouse-card,
+  .greenhouse-card-with-icon {
+    min-height: 260px;
+    padding: 18px 12px;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .metric {
+    padding: 8px;
+  }
+
+  .empty-state h3 {
+    font-size: 18px;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+  }
+}
+
+/* Адаптация для landscape ориентации */
+@media (max-width: 768px) and (orientation: landscape) {
+  .sidebar {
+    height: 60px;
+  }
+
+  .logo span {
+    display: inline; /* Показываем текст в landscape */
+  }
+
+  .nav-item span {
+    display: inline; /* Показываем текст в landscape */
+  }
+
+  .nav-item {
+    padding: 15px 20px;
+  }
+
+  .greenhouses-grid {
+    grid-template-columns: repeat(2, 1fr) !important; /* Две колонки в landscape */
+  }
+
+  .greenhouse-card,
+  .greenhouse-card-with-icon {
+    min-height: 250px;
+  }
+}
+
+/* Улучшение touch-опыта на мобильных */
+@media (hover: none) and (pointer: coarse) {
+  .nav-item,
+  .btn {
+    min-height: 44px; /* Минимальный размер для touch (Apple рекомендация) */
+  }
+
+  .greenhouse-card,
+  .greenhouse-card-with-icon {
+    min-height: 320px; /* Больше места для тапов */
+  }
+
+  .nav-item:active,
+  .btn:active,
+  .greenhouse-card:active,
+  .greenhouse-card-with-icon:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+    transition: transform 0.1s;
+  }
+}
+
+/* Предотвращение зума при фокусе на мобильных */
+@media screen and (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* Предотвращает зум в iOS при фокусе */
+  }
+}
+
+/* Исправление для iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  .greenhouse-card,
+  .greenhouse-card-with-icon {
+    min-height: -webkit-fit-content;
+  }
+  
+  body {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Планшеты (портретная ориентация) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .greenhouses-grid {
+    grid-template-columns: repeat(2, 1fr) !important; /* Две колонки на планшетах */
+  }
+  
+  .sidebar {
+    width: 200px;
+  }
+  
+  .content {
+    padding: 20px;
+  }
+}
